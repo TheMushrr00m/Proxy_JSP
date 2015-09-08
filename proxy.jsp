@@ -6,6 +6,7 @@
     Web        : http://laesporadelhongo.com/
 -->
 
+<!-- Send
 <%@page contentType="text/html" pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html>
@@ -19,7 +20,7 @@
             <input type="submit" value="Go to!">-->
         </form>
     </body>
-</html>
+</html
 
 <%@page session="false" %>
 <%@page import=

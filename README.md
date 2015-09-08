@@ -1,4 +1,4 @@
-# Web_Proxy_JSP
+# JSP Proxy
 
 This is an example of _web-proxy_ using JSP.
 

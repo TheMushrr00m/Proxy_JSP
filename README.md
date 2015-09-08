@@ -4,7 +4,7 @@ This is an example of _web-proxy_ using JSP.
 
 ***
 
-This project was created using Netbeans,
+A JSP proxy that handles support for http/https connections.
 the code of the proxy is on /web/index.jsp
 
 * * *

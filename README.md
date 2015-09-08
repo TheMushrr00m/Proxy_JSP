@@ -5,7 +5,7 @@ This is an example of _web-proxy_ using JSP.
 ***
 
 A JSP proxy that handles support for http/https connections.
-the code of the proxy is on /web/index.jsp
+All contributions are welcome.
 
 * * *
 ## Created by: Gabriel Cueto Báez <TheMushrr00m>

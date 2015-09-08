@@ -29,7 +29,8 @@
 java.io.*" %>
 
 <%
-try {
+try 
+{
 	String reqUrl = request.getQueryString();
     // Gets the url that the user write into the field.
     //String reqUrl = request.getParameter("uri"); 

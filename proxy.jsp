@@ -17,7 +17,7 @@
     <body>
         <h1>TEST</h1>
         <form action="index.jsp" name="uri" method="POST">
-            <!--<input type="url" placeholder="http://www.oropezasc.com/" required>
+            <!--<input type="uri" placeholder="http://www.oropezasc.com/" required>
             <input type="submit" value="Go to!">-->
         </form>
     </body>
@@ -30,29 +30,30 @@ java.io.*" %>
 
 <%
 try {
-	String reqUrl = request.getQueryString(); //OR:  request.getParameter("url");
-        //String reqUrl = request.getParameter("uri"); // Gets the url that the user write into the field.
-        URL url = new URL(reqUrl);
-        HttpURLConnection con = (HttpURLConnection)url.openConnection();
-        con.setDoOutput(true);
-        con.setRequestMethod(request.getMethod());
-        int clength = request.getContentLength();
-        if(clength > 0) 
-        {   
-            con.setDoInput(true);
-            byte[] idata = new byte[clength];
-            request.getInputStream().read(idata, 0, clength);
-            con.getOutputStream().write(idata, 0, clength);
-        }
-        response.setContentType(con.getContentType());
+	String reqUrl = request.getQueryString();
+    // Gets the url that the user write into the field.
+    //String reqUrl = request.getParameter("uri"); 
+    URL url = new URL(reqUrl);
+    HttpURLConnection con = (HttpURLConnection)url.openConnection();
+    con.setDoOutput(true);
+    con.setRequestMethod(request.getMethod());
+    int clength = request.getContentLength();
+    if(clength > 0) 
+    {   
+        con.setDoInput(true);
+        byte[] idata = new byte[clength];
+        request.getInputStream().read(idata, 0, clength);
+        con.getOutputStream().write(idata, 0, clength);
+    }
+    response.setContentType(con.getContentType());Þ
         
 	BufferedReader rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String line;
-        while ((line = rd.readLine()) != null) 
-        {
-                out.println(line); 
-        }
-        rd.close(); 
+    String line;
+    while ((line = rd.readLine()) != null)         
+    {
+        out.println(line); 
+    }
+    rd.close(); 
 } catch(Exception e) 
 {
 	response.setStatus(500);

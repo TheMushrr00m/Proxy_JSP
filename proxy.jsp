@@ -45,7 +45,7 @@ try {
         request.getInputStream().read(idata, 0, clength);
         con.getOutputStream().write(idata, 0, clength);
     }
-    response.setContentType(con.getContentType());Þ
+    response.setContentType(con.getContentType());
         
 	BufferedReader rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
     String line;

@@ -6,7 +6,7 @@
     Web        : http://laesporadelhongo.com/
 -->
 
-<!-- Send
+
 <%@page contentType="text/html" pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html>
@@ -15,12 +15,13 @@
         <title> Intranet Proxy </title>
     </head>
     <body>
+        <h1>TEST</h1>
         <form action="index.jsp" name="uri" method="POST">
             <!--<input type="url" placeholder="http://www.oropezasc.com/" required>
             <input type="submit" value="Go to!">-->
         </form>
     </body>
-</html
+</html>
 
 <%@page session="false" %>
 <%@page import=

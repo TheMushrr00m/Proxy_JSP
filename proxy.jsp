@@ -11,7 +11,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title> <-- Intranet Proxy!! --> </title>
+        <title> Intranet Proxy!! </title>
         <style type="text/css">
         h1, h2{
             color: #50ee99;
@@ -67,14 +67,14 @@ try
 
 <%
     response.setContentType(con.getContentType());
-        
 	BufferedReader rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
     String line;
     while ((line = rd.readLine()) != null)         
     {
         out.println(line); 
     }
-    rd.close(); 
+    rd.close();
+    response.setStatus(200); 
 } catch(Exception e) 
 {
 	response.setStatus(500);

@@ -76,41 +76,48 @@ java.text.SimpleDateFormat" %>
     // Change 'localhost' for the proxy address.
     // If you do not use a port different of '80', you do not need to 
     // specify at the address.
-    //String PROXY_ADDR = "http://localhost:8080/proxy.jsp";
-    String PROXY_REFERER = "http://localhost:8080/proxy.jsp";
-    // Gets the url that the user want to access.
-    String req_url; // = request.getQueryString(); req_url = request.getParameter("parameter");
+    String PROXY_ADDR = "http://localhost/Proxy_JSP/proxy.jsp";
     URL url;
+    // Gets the url that the user want to access.
+    String req_url; // = request.getQueryString(); OR req_url = request.getParameter("parameter");
+    ServerUrl serverUrl;
     HttpURLConnection con;
     ServerUrl[] serverUrls;
-    boolean mustMatch;  
-    //int time_out = 6000;
-    //String sourceIP = request.getRemoteAddr();
+
+    public static final class DataValidUtil {
+        public static String removeCRLF(String inputLine) {
+            String filteredLine = inputLine;
+            if (hasCRLF(inputLine)) {
+                filteredLine = filteredLine.replace("\n","").replace("\r","");
+            }
+            return filteredLine;
+        }
+        public static String replaceCRLF(String inputLine, String replaceString) {
+            String filteredLine = inputLine;
+            if (hasCRLF(inputLine)) {
+                filteredLine = filteredLine.replace("\n",replaceString).replace("\r",replaceString);
+            }
+            return filteredLine;
+        }
+        public static boolean hasCRLF(String inputLine) {
+            return inputLine.contains("\n") || inputLine.contains("\r");
+        }
+    }
 
     // setReferer if real referer exist
     private void setReferer(String r) {
-        PROXY_REFERER = r;
+        PROXY_ADDR = r;
     }
 
     public void setServerUrls(ServerUrl[] value){
         this.serverUrls = value;
     }
 
-    public boolean getMustMatch(){
-        return this.mustMatch;
-    }
-
-    public void setMustMatch(boolean value){
-        this.mustMatch = value;
-    }
-
     public static class ServerUrl {
         String url;
-        boolean matchAll;
         String hostRedirect;
-        public ServerUrl(String url, String matchAll, String hostRedirect){
+        public ServerUrl(String url, String hostRedirect){
             this.url = url;
-            this.matchAll = matchAll == null || matchAll.isEmpty() || Boolean.parseBoolean(matchAll);
             this.hostRedirect = hostRedirect;
         }
         public ServerUrl(String url){
@@ -122,14 +129,8 @@ java.text.SimpleDateFormat" %>
         public void setUrl(String value){
             this.url = value;
         }
-        public boolean getMatchAll(){
-            return this.matchAll;
-        }
-        public void setMatchAll(boolean value){
-            this.matchAll = value;
-        }
         public String getHostRedirect() {
-            return hostRedirect;
+            return this.hostRedirect;
         }
         public void setHostRedirect(String hostRedirect) {
             this.hostRedirect = hostRedirect;
@@ -191,7 +192,7 @@ java.text.SimpleDateFormat" %>
         byte[] bytes = null;
         //build the header sent to server
         HashMap<String, String> headerInfo=new HashMap<>();
-        headerInfo.put("Referer", PROXY_REFERER);
+        headerInfo.put("Referer", PROXY_ADDR);
         if (method.equals("POST")){
             String[] uriArray = uri.split("\\?", 2);
             uri = uriArray[0];
@@ -303,292 +304,62 @@ java.text.SimpleDateFormat" %>
         return false;
     }
 
-    private boolean domainMatched(String allowedRefererDomain, String refererDomain) throws MalformedURLException{
-        if (allowedRefererDomain.equals(refererDomain)){
-            return true;
-        }
-        //try if the allowed referer contains wildcard for subdomain
-        if (allowedRefererDomain.contains("*")){
-            if (checkWildcardSubdomain(allowedRefererDomain, refererDomain)){
-                return true;//return true if match wildcard subdomain
-            }
-        }
-        return false;
-    }
-
     private boolean protocolMatch(String allowedRefererProtocol, String refererProtocol){
         return allowedRefererProtocol.equals(refererProtocol);
-    }
-
-    private boolean checkReferer(String[] allowedReferers, String referer) throws MalformedURLException{
-        if (allowedReferers != null && allowedReferers.length > 0){
-            if (allowedReferers.length == 1 && allowedReferers[0].equals("*")) {
-                return true; //speed-up
-            }
-            for (String allowedReferer : allowedReferers){
-                allowedReferer = allowedReferer.replaceAll("\\s", "");
-                URL refererURL = new URL(referer);
-                URL allowedRefererURL;
-                //since the allowedReferer can be a malformedURL, we first construct a valid one to be compared with referer
-                //if allowedReferer starts with https:// or http://, then exact match is required
-                if (allowedReferer.startsWith("https://") || allowedReferer.startsWith("http://")){
-                    allowedRefererURL = new URL(allowedReferer);
-                } else {
-                    String protocol = refererURL.getProtocol();
-                    //if allowedReferer starts with "//" or no protocol, we use the one from refererURL to prefix to allowedReferer.
-                    if (allowedReferer.startsWith("//")){
-                        allowedRefererURL = new URL(protocol+":"+allowedReferer);
-                    } else {
-                        //if the allowedReferer looks like "example.esri.com"
-                        allowedRefererURL = new URL(protocol+"://"+allowedReferer);
-                    }
-                }
-                //Check if both domain and path match
-                if (protocolMatch(allowedRefererURL.getProtocol(), refererURL.getProtocol()) &&
-                        domainMatched(allowedRefererURL.getHost(), refererURL.getHost()) &&
-                        pathMatched(allowedRefererURL.getPath(), refererURL.getPath())) {
-                    return true;
-                }
-            }
-            return false;//no-match in allowedReferer, does not allow the request
-        }
-        return true;//when allowedReferer is null, then allow everything
     }
 
      private String getFullUrl(String url){
         return url.startsWith("//") ? url.replace("//","https://") : url;
     }
 
-    //===================================
-    //              ERRORS
-    //===================================
-
-    private static void sendErrorResponse(HttpServletResponse response, String errorDetails, String errorMessage, int errorCode) throws IOException{
-        response.setHeader("Content-Type", "application/json");
-        String message = "{" +
-                "\"error\": {" +
-                "\"code\": " + errorCode + "," +
-                "\"details\": [" +
-                "\"" + errorDetails + "\"" +
-                "], \"message\": \"" + errorMessage + "\"}}";
-        response.setStatus(errorCode);
-        OutputStream output = response.getOutputStream();
-        output.write(message.getBytes());
-        output.flush();
-    }
-
-    private static void _sendURLMismatchError(HttpServletResponse response, String attemptedUri) throws IOException{
-        sendErrorResponse(response, "Proxy has not been set up for this URL. Make sure there is a serverUrl in the configuration file that matches: " + attemptedUri,
-                "Proxy has not been set up for this URL.", HttpServletResponse.SC_FORBIDDEN);
-    }
-    private static void _sendPingMessage(HttpServletResponse response, String version, String config, String log) throws IOException{
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setHeader("Content-Type", "application/json");
-        String message = "{ " +
-                "\"Proxy Version\": \"" + version + "\"" +
-                //", \"Java Version\": \"" + System.getProperty("java.version") + "\"" +
-                ", \"Configuration File\": \"" + config + "\""  +
-                ", \"Log File\": \"" + log + "\"" +
-                "}";
-        OutputStream output = response.getOutputStream();
-        output.write(message.getBytes());
-        output.flush();
-    }
-    // Check if the originalUri needs to be host-redirected.
-    private String uriHostRedirect(String originalUri, ServerUrl serverUrl) throws MalformedURLException{
+    // Check if the req_url needs to be host-redirected.
+    private String uriHostRedirect(String req_url, ServerUrl serverUrl) throws MalformedURLException{
         if (serverUrl.hostRedirect != null && !serverUrl.hostRedirect.isEmpty()){
-            URL request = new URL(originalUri);
+            URL request = new URL(req_url);
             String redirectHost = serverUrl.getHostRedirect();
             redirectHost = redirectHost.endsWith("/")?redirectHost.substring(0, redirectHost.length()-1):redirectHost;
             String queryString = request.getQuery();
             return redirectHost + request.getPath() + ((queryString != null) ? ("?" + queryString) : "");
         }
-        return originalUri;
+        return req_url;
     }
+
+    //===================================
+    //              ERRORS
+    //===================================
+
 %>
 
 <!-- Begins the interesting code. -->
 <%
-ServerUrl serverUrl;
-String originalUri = request.getQueryString();
+String req_url = request.getQueryString();
 try {
         try {
             out.clear();
             out = pageContext.pushBody();
-            //check if the originalUri to be proxied is empty
-            if (originalUri == null || originalUri.isEmpty()){
-                String errorMessage = "This proxy does not support empty parameters.";
-                _log(Level.WARNING, errorMessage);
-                sendErrorResponse(response, errorMessage, "400 - " + errorMessage, HttpServletResponse.SC_BAD_REQUEST);
+            // Check if the req_url to access into the proxy is empty.
+            if (req_url == null || req_url.isEmpty()){
                 return;
             }
-            //check if the originalUri to be proxied is "ping"
-            if (originalUri.equalsIgnoreCase("ping")){
-                String checkConfig = getConfig().canReadProxyConfig() ? "OK": "Not Readable";
-                String checkLog = okToLog() ? "OK": "Not Exist/Readable";
-                _sendPingMessage(response, version, checkConfig, checkLog);
-                return;
-            }
-            //check if the originalUri is encoded then decode it
-            if (originalUri.toLowerCase().startsWith("http%3a%2f%2f") || originalUri.toLowerCase().startsWith("https%3a%2f%2f")) originalUri = URLDecoder.decode(originalUri, "UTF-8");
-            //check the Referer in request header against the allowedReferer in proxy.config
-            String[] allowedReferers = getConfig().getAllowedReferers();
-            if (allowedReferers != null && allowedReferers.length > 0 && request.getHeader("referer") != null){
-                setReferer(request.getHeader("referer")); //replace PROXY_REFERER with real proxy
-                String httpReferer;
-                try{
-                    //only use the hostname of the referer url
-                    httpReferer = new URL(request.getHeader("referer")).toString();
-                }catch(Exception e){
-                    _log(Level.WARNING, "Proxy is being used from an invalid referer: " + request.getHeader("referer"));
-                    sendErrorResponse(response, "Error verifying referer. ", "403 - Forbidden: Access is denied.", HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-                if (!checkReferer(allowedReferers, httpReferer)){
-                    _log(Level.WARNING, "Proxy is being used from an unknown referer: " + request.getHeader("referer"));
-                    sendErrorResponse(response, "Unsupported referer. ", "403 - Forbidden: Access is denied.", HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            }
-            //Check to see if allowed referer list is specified and reject if referer is null
-            if (request.getHeader("referer") == null && allowedReferers != null && !allowedReferers[0].equals("*")) {
-                _log(Level.WARNING, "Proxy is being called by a null referer.  Access denied.");
-                sendErrorResponse(response, "Current proxy configuration settings do not allow requests which do not include a referer header.", "403 - Forbidden: Access is denied.", HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-            //get the serverUrl from proxy.config
-            serverUrl = getConfig().getConfigServerUrl(originalUri);
+
+            //check if the req_url is encoded then decode it
+            if (req_url.toLowerCase().startsWith("http%3a%2f%2f") || req_url.toLowerCase().startsWith("https%3a%2f%2f")) req_url = URLDecoder.decode(req_url, "UTF-8");
+
+            // Add your serverUrl
+            serverUrl = (Url) req_url; 
             if (serverUrl == null) {
-                //if no serverUrl found, send error message and get out.
-                _sendURLMismatchError(response, originalUri);
                 return;
             }
         } catch (IllegalStateException e) {
-            _log(Level.WARNING, "Proxy is being used for an unsupported service: " + originalUri);
-            _sendURLMismatchError(response, originalUri);
             return;
         }
-        //Throttling: checking the rate limit coming from particular referrer
-        if ( serverUrl.getRateLimit() > -1) {
-            synchronized(_rateMapLock){
-                ConcurrentHashMap<String, RateMeter> ratemap = castRateMap(application.getAttribute("rateMap"));
-                if (ratemap == null){
-                    ratemap = new ConcurrentHashMap<>();
-                    application.setAttribute("rateMap", ratemap);
-                    application.setAttribute("rateMap_cleanup_counter", 0);
-                }
-                String key = "[" + serverUrl.getUrl() + "]x[" + request.getRemoteAddr() + "]";
-                RateMeter rate = ratemap.get(key);
-                if (rate == null) {
-                    rate = new RateMeter(serverUrl.getRateLimit(), serverUrl.getRateLimitPeriod());
-                    RateMeter rateCheck = ratemap.putIfAbsent(key, rate);
-                    if (rateCheck != null){
-                        rate = rateCheck;
-                    }
-                }
-                if (!rate.click()) {
-                    _log(Level.WARNING, "Pair " + key + " is throttled to " + serverUrl.getRateLimit() + " requests per " + serverUrl.getRateLimitPeriod() + " minute(s). Come back later.");
-                    sendErrorResponse(response, "This is a metered resource, number of requests have exceeded the rate limit interval.",
-                            "Error 429 - Too Many Requests", 429);
-                    return;
-                }
-                //making sure the rateMap gets periodically cleaned up so it does not grow uncontrollably
-                int cnt = (int) application.getAttribute("rateMap_cleanup_counter");
-                cnt++;
-                if (cnt >= CLEAN_RATEMAP_AFTER) {
-                    cnt = 0;
-                    cleanUpRatemap(ratemap);
-                }
-                application.setAttribute("rateMap_cleanup_counter", cnt);
-            }
-        }
-        //readying body (if any) of POST request
-        byte[] postBody = readRequestPostBody(request);
+        // Readying body (if any) of POST request
+        byte[] postBody = readRequestBody(request);
         String post = new String(postBody);
-        //check if the originalUri needs to be host-redirected
-        String requestUri = uriHostRedirect(originalUri, serverUrl);
-        //if token comes with client request, it takes precedence over token or credentials stored in configuration
-        boolean hasClientToken = requestUri.contains("?token=") || requestUri.contains("&token=") || post.contains("?token=") || post.contains("&token=");
-        String token = "";
-        if (!hasClientToken) {
-            // Get new token and append to the request.
-            // But first, look up in the application scope, maybe it's already there:
-            token = (String)application.getAttribute("token_for_" + serverUrl.getUrl());
-            boolean tokenIsInApplicationScope = token != null && !token.isEmpty();
-            //if still no token, let's see if there are credentials stored in configuration which we can use to obtain new token
-            if (!tokenIsInApplicationScope){
-                token = getNewTokenIfCredentialsAreSpecified(serverUrl, requestUri);
-            }
-            if (token != null && !token.isEmpty() && !tokenIsInApplicationScope) {
-                //storing the token in Application scope, to do not waste time on requesting new one until it expires or the app is restarted.
-                application.setAttribute("token_for_" + serverUrl.getUrl(), token);
-            }
-        }
-        //forwarding original request
-        HttpURLConnection con = forwardToServer(request, addTokenToUri(requestUri, token), postBody);
-        if ( token == null || token.isEmpty() || hasClientToken) {
-            //if token is not required or provided by the client, just fetch the response as is:
-            fetchAndPassBackToClient(con, response, true);
-        } else {
-            //credentials for secured service have come from configuration file:
-            //it means that the proxy is responsible for making sure they were properly applied:
-            //first attempt to send the request:
-            boolean tokenRequired = fetchAndPassBackToClient(con, response, false);
-            //checking if previously used token has expired and needs to be renewed
-            if (tokenRequired) {
-                _log(Level.INFO, "Renewing token and trying again.");
-                //server returned error - potential cause: token has expired.
-                //we'll do second attempt to call the server with renewed token:
-                token = getNewTokenIfCredentialsAreSpecified(serverUrl, requestUri);
-                con = forwardToServer(request, addTokenToUri(requestUri, token), postBody);
-                //storing the token in Application scope, to do not waste time on requesting new one until it expires or the app is restarted.
-                synchronized(this){
-                    application.setAttribute("token_for_" + serverUrl.getUrl(), token);
-                }
-                fetchAndPassBackToClient(con, response, true);
-            }
-        }
+        // Check if the req_url needs to be host-redirected
+        String requestUri = uriHostRedirect(req_url, serverUrl);
+        // Forwarding original request
+        HttpURLConnection con = forwardToServer(request, requestUri, postBody);
     } catch (FileNotFoundException e){
-        try {
-            _log("404 Not Found .", e);
-            response.sendError(404, e.getLocalizedMessage() + " is NOT Found.");
-            return;
-        }catch (IOException finalErr){
-            _log("There was an error sending a response to the client.  Will not try again.", finalErr);
-        }
-    } catch (IOException e){
-        try {
-            _log("A fatal proxy error occurred.", e);
-            response.sendError(500, e.getLocalizedMessage());
-            return;
-        } catch (IOException finalErr){
-            _log("There was an error sending a response to the client.  Will not try again.", finalErr);
-        }
     }
-%>
-
-
-    /*
-    url = new URL(req_url);
-    con = (HttpURLConnection) url.openConnection();
-    con.setDoOutput(true);
-    con.setRequestMethod(request.getMethod());
-    int clength = request.getContentLength();
-    if(clength > 0) {   
-        con.setDoInput(true);
-        byte[] idata = new byte[clength];   
-        request.getInputStream().read(idata, 0, clength);
-        con.getOutputStream().write(idata, 0, clength);
-    }
-    response.setContentType(con.getContentType());
-    BufferedReader rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
-    String line;
-    while ((line = rd.readLine()) != null) {
-        out.println(line); 
-    }
-    rd.close();
-    response.setStatus(200); 
-} catch(Exception e) {
-    response.setStatus(500); */
-}
 %>

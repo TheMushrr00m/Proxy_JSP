@@ -20,6 +20,13 @@
             background-color: #7e8f86;
         }
         </style>
+        <script type="text/javascript">
+            /*Remove the "messages" of the page when initiating a connection with the site that the user tries to access */
+            var clearMessages = function(){
+                var messages = document.getElementById('messages');
+                messages.parentNode.removeChild(messages);
+            }
+    </script>
     </head>
     <body>
         <div id="messages">
@@ -43,50 +50,62 @@ java.io.*" %>
 <%! 
     // Set the default values of the proxy.
     // Change 'localhost' for the proxy address.
-    // If you use a port '80', is not neccesary that you put in the   
-    // address.
+    // If you do not use a port different of '80', you do not need to 
+    // specify at the address.
     String PROXY_ADDR = "http://localhost:8080/proxy.jsp";
     //int time_out = 6000;
-    //String _IP = request.getRemoteAddr();
+    //String sourceIP = request.getRemoteAddr();
+
+    // setReferer if real referer exist
+    private void setReferer(String r) {
+        PROXY_ADDR = r;
+    }
+
+    // Process the request body sent by the client.
+    private byte[] readRequestBody(HttpServletRequest request) throws IOException{
+        int clength = request.getContentLength();
+        if(clength > 0) {
+            //con.setDoInput(true);
+            byte[] bytes = new byte[clength];
+            //request.getInputStream().read(bytes, 0, clength);
+            //con.getOutputStream().write(bytes, 0, clength);
+            DataInputStream dataIs = new DataInputStream(request.getInputStream());
+            dataIs.readFully(bytes);
+            dataIs.close();
+            return bytes;
+        }
+        return new byte[0];
+    }
 %>
+
+<!-- Begins the interesting code. -->
 <%
 try 
 {
     // Gets the url that the user want to access.
-	String req_url = request.getQueryString();
+    String req_url = request.getQueryString();
     //String req_url = request.getParameter("uri"); 
     URL url = new URL(req_url);
     HttpURLConnection con = (HttpURLConnection) url.openConnection();
     con.setDoOutput(true);
     con.setRequestMethod(request.getMethod());
     int clength = request.getContentLength();
-    if(clength > 0) 
-    {   
+    if(clength > 0) {   
         con.setDoInput(true);
         byte[] idata = new byte[clength];   
         request.getInputStream().read(idata, 0, clength);
         con.getOutputStream().write(idata, 0, clength);
     }
-    %>
-
-    <!-- Remove the "messages" of the page when initiating a connection with the site that the user tries to access 
-    <script type="text/javascript">
-        var messages = document.getElementById('messages');
-        messages.parentNode.removeChild(messages);
-    </script>-->
-
 <%
     response.setContentType(con.getContentType());
-	BufferedReader rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
+    BufferedReader rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
     String line;
-    while ((line = rd.readLine()) != null)         
-    {
+    while ((line = rd.readLine()) != null) {
         out.println(line); 
     }
     rd.close();
     response.setStatus(200); 
-} catch(Exception e) 
-{
-	response.setStatus(500);
+} catch(Exception e) {
+    response.setStatus(500);
 }
 %>

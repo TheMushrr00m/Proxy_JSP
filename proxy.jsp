@@ -5,41 +5,6 @@
     Author     : Gabriel Cueto Báez
     Web        : http://laesporadelhongo.com/
 -->
-
-<%@page contentType="text/html" pageEncoding="utf-8"%>
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title> Intranet Proxy!! </title>
-        <style type="text/css">
-        h1, h2{
-            color: #50ee99;
-        }
-        body{
-            background-color: #7e8f86;
-        }
-        </style>
-        <script type="text/javascript">
-            /*Remove the "messages" of the page when initiating a connection with the site that the user tries to access */
-            var clearMessages = function(){
-                var messages = document.getElementById('messages');
-                messages.parentNode.removeChild(messages);
-            }
-    </script>
-    </head>
-    <body>
-        <div id="messages">
-            <h1>Work in progress...</h1>
-            <h2>Testing connection...</h2>
-        </div>
-        <form action="index.jsp" name="uri" method="POST">
-            <!--<input type="uri" placeholder="http://www.oropezasc.com/" required>
-            <input type="submit" value="Go to!">-->
-        </form>
-    </body>
-</html>
-
 <!-- Start the JSP code -->
 <%@page session="false" %>
 <%@page import=

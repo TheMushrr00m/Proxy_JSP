@@ -38,12 +38,22 @@
 <%@page import=
 "java.net.*,
 java.io.*" %>
+
+<!-- Initiating declaration. -->
+<%! 
+    // Set the default values of the proxy.
+    // Change 'localhost' for the proxy address.
+    // If you use a port '80', is not neccesary that you put in the   
+    // address.
+    String PROXY_ADDR = "http://localhost:8080/proxy.jsp";
+    //int time_out = 6000;
+    //String _IP = request.getRemoteAddr();
+%>
 <%
 try 
 {
     // Gets the url that the user want to access.
 	String req_url = request.getQueryString();
-    //int time_out = 6000;
     //String req_url = request.getParameter("uri"); 
     URL url = new URL(req_url);
     HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -53,17 +63,17 @@ try
     if(clength > 0) 
     {   
         con.setDoInput(true);
-        byte[] idata = new byte[clength];
+        byte[] idata = new byte[clength];   
         request.getInputStream().read(idata, 0, clength);
         con.getOutputStream().write(idata, 0, clength);
     }
     %>
 
-    <!-- Remove the "messages" of the page when initiating a connection with the site that the user tries to access -->
+    <!-- Remove the "messages" of the page when initiating a connection with the site that the user tries to access 
     <script type="text/javascript">
         var messages = document.getElementById('messages');
         messages.parentNode.removeChild(messages);
-    </script>
+    </script>-->
 
 <%
     response.setContentType(con.getContentType());

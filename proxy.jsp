@@ -9,7 +9,6 @@
         Start the JSP code 
     ======================== -->
 
-
 <%@page session="false" %>
 <!-- Initiatig the imports -->
 <%@page import=
@@ -42,8 +41,21 @@ java.io.*" %>
         }
     }
 
+    private String get_Full_Url(String url){
+        if(url.startsWith("//")){
+            url = url.replace("//","https://");
+        } 
+        else if(url.startsWith("www")){
+            url = url.replace("www", "https://www");
+        }
+        else if(url.startsWith("http://")){
+            url = url.replace("http://", "https://");    
+        }
+        return url;
+    }
+
     // Process the request body sent by the client.
-    private byte[] readRequestBody(HttpServletRequest request) throws IOException{
+    private byte[] read_Request_Body(HttpServletRequest request) throws IOException{
         int clength = request.getContentLength();
         if(clength > 0) {
             //con.setDoInput(true);
@@ -61,12 +73,27 @@ java.io.*" %>
 
 <!-- Begins the interesting code. -->
 <%
-String req_url = request.getQueryString();
+req_url = request.getQueryString();
 // Just for testing...
-out.println("<h1> The URL is: </h1>" + req_url); 
+out.println("Introduced URL: " + req_url);
 try {
+    if(req_url == null || req_url.isEmpty()){}
+    else{
+        req_url = get_Full_Url(req_url);
+        url = new URL(req_url);    
+        // Just for testing...
+        out.println("ModifiedURL: "+url);
+    }   
+    con = (HttpURLConnection) url.openConnection();
+    con.setDoOutput(true);
+    con.setRequestMethod(request.getMethod());
+    // Just for testing...
+    out.println(""+read_Request_Body(request));
+} catch(Exception e) {
+    response.setStatus(500);
+}
+/*
     String reqUrl = request.getQueryString(); //OR:  request.getParameter("url");
- 
     URL url = new URL(reqUrl);
     HttpURLConnection con = (HttpURLConnection)url.openConnection();
     con.setDoOutput(true);
@@ -86,8 +113,5 @@ try {
         out.println(line); 
     }
     rd.close();
- 
-} catch(Exception e) {
-    response.setStatus(500);
-}
+ */
 %>

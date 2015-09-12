@@ -71,7 +71,7 @@ java.util.Enumeration" %>
             dataIs.close();
             return bytes;
         }
-        return new byte[1];
+        return new byte[0];
     }
 
     // Simplified interface of doHTTPRequest, will eventually call the complete interface of doHTTPRequest

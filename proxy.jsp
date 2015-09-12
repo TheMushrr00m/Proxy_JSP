@@ -13,7 +13,10 @@
 <!-- Initiatig the imports -->
 <%@page import=
 "java.net.*,
-java.io.*" %>
+java.io.*,
+java.util.Map,
+java.util.HashMap,
+java.util.Enumeration" %>
 
 <!-- Initiating declaration. -->
 <%! 
@@ -21,7 +24,7 @@ java.io.*" %>
     // Change 'localhost' for the proxy address.
     // If you do not use a port different of '80', you do not need to 
     // specify at the address.
-    String PROXY_ADDR = "http://localhost/Proxy_JSP/proxy.jsp";
+    String PROXY_ADDR = "http://localhost:8080/Proxy_JSP/proxy.jsp";
     URL url;
     // Gets the url that the user want to access.
     String req_url; // = request.getQueryString(); || req_url = request.getParameter("parameter");
@@ -41,6 +44,7 @@ java.io.*" %>
         }
     }
 
+    // Change the URL into 'https' format.
     private String get_Full_Url(String url){
         if(url.startsWith("//")){
             url = url.replace("//","https://");
@@ -67,7 +71,73 @@ java.io.*" %>
             dataIs.close();
             return bytes;
         }
-        return new byte[0];
+        return new byte[1];
+    }
+
+    // Simplified interface of doHTTPRequest, will eventually call the complete interface of doHTTPRequest
+    private HttpURLConnection doHTTPRequest(String uri, String method) throws IOException{
+        //build the bytes sent to server
+        byte[] bytes = null;
+
+        //build the header sent to server
+        HashMap<String, String> headerInfo = new HashMap<String, String>();
+        headerInfo.put("Referer", PROXY_ADDR);
+        if (method.equals("POST")){
+            String[] uriArray = uri.split("\\?", 2);
+            uri = uriArray[0];
+
+            headerInfo.put("Content-Type", "application/x-www-form-urlencoded");
+
+            if (uriArray.length > 1){
+                String queryString = uriArray[1];
+                bytes = queryString.getBytes("UTF-8");
+            }
+        }
+        return doHTTPRequest(uri, bytes, method, headerInfo);
+    }
+
+    //complete interface of doHTTPRequest
+    private HttpURLConnection doHTTPRequest(String uri, byte[] bytes, String method, Map mapHeaderInfo) throws IOException{
+        URL url = new URL(uri);
+        HttpURLConnection con = (HttpURLConnection)url.openConnection();
+
+        con.setConnectTimeout(5000);
+        con.setReadTimeout(10000);
+        con.setRequestMethod(method);
+
+        //pass the header to the proxy's request
+        //passHeadersInfo(mapHeaderInfo, con);
+
+        //if it is a POST request
+        if (bytes != null && bytes.length > 0 || method.equals("POST")) {
+
+            if (bytes == null){
+                bytes = new byte[0];
+            }
+
+            con.setRequestMethod("POST");
+            con.setDoOutput(true);
+
+
+            OutputStream os = con.getOutputStream();
+            os.write(bytes);
+        }
+
+        return con;
+    }
+
+    // Sends the actual request to the server.
+    private HttpURLConnection forwardToServer(HttpServletRequest request, String uri, byte[] postBody) throws IOException{
+        //copy the client's request header to the proxy's request
+        Enumeration headerNames = request.getHeaderNames();
+        HashMap<String, String> mapHeaderInfo = new HashMap<String, String>();
+        while (headerNames.hasMoreElements()) {
+            String key = (String) headerNames.nextElement();
+            String value = request.getHeader(key);
+            if (!key.equalsIgnoreCase("host")) mapHeaderInfo.put(key, value);
+        }
+        if(postBody.length > 0){ return doHTTPRequest(uri, postBody, "POST", mapHeaderInfo); }
+        else { return doHTTPRequest(uri, request.getMethod()); }
     }
 %>
 
@@ -83,12 +153,16 @@ try {
         url = new URL(req_url);    
         // Just for testing...
         out.println("ModifiedURL: "+url);
+        out.println("ContentLength: "+request.getContentLength());
     }   
     con = (HttpURLConnection) url.openConnection();
     con.setDoOutput(true);
     con.setRequestMethod(request.getMethod());
+    byte[] post_Body = read_Request_Body(request);
+    String post = new String(post_Body);
+    forwardToServer(request, req_url, post_Body);
     // Just for testing...
-    out.println(""+read_Request_Body(request));
+    out.println("RequestBody: " + forwardToServer(request, req_url, post_Body));
 } catch(Exception e) {
     response.setStatus(500);
 }

@@ -62,6 +62,7 @@ java.io.*" %>
 <!-- Begins the interesting code. -->
 <%
 String req_url = request.getQueryString();
+// Just for testing...
 out.println("<h1> The URL is: </h1>" + req_url); 
 try {
     String reqUrl = request.getQueryString(); //OR:  request.getParameter("url");

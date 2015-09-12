@@ -57,26 +57,6 @@ java.io.*" %>
         }
         return new byte[0];
     }
-
-    // Complete interface of doHTTPRequest.
-    private HttpURLConnection doHTTPRequest(String uri, byte[] bytes, String method) throws IOException{
-        URL url = new URL(uri);
-        HttpURLConnection con = (HttpURLConnection)url.openConnection();
-        con.setConnectTimeout(5000);
-        con.setReadTimeout(10000);
-        con.setRequestMethod(method);
-        //if it is a POST request
-        if (bytes != null && bytes.length > 0 || method.equals("POST")) {
-            if (bytes == null){
-                bytes = new byte[0];
-            }
-            con.setRequestMethod("POST");
-            con.setDoOutput(true);
-            OutputStream os = con.getOutputStream();
-            os.write(bytes);
-        }
-        return con;
-    }
 %>
 
 <!-- Begins the interesting code. -->

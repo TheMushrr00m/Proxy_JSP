@@ -35,6 +35,7 @@
     String req_url; // = request.getQueryString(); || req_url = request.getParameter("parameter");
     ServerUrl serverUrl;
     HttpURLConnection con;
+    boolean flag;
 
     public static final class DataValidUtil {
         public static String removeCRLF(String inputLine) {
@@ -249,12 +250,13 @@ try {
         byte[] post_Body = read_Request_Body(request);
         String post = new String(post_Body);
         con = forward_To_Server(request, req_url, post_Body);
+        flag = true;
         fetch_And_Pass_Back_To_Client(con, response);
         // Just for testing...
-        out.println("request: " + request);
-        con = (HttpURLConnection) url.openConnection();
+        out.println("<h1>FLAG: </h1>");
+        /*con = (HttpURLConnection) url.openConnection();
         con.setDoOutput(true);
-        con.setRequestMethod(request.getMethod());
+        con.setRequestMethod(request.getMethod());*/
         response.setStatus(200);
     }
 } catch(Exception e) {
@@ -262,3 +264,25 @@ try {
 }
 %>
 
+<!-- 
+    ====================================
+            Begins the HTML code 
+    ==================================== -->
+
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<!Doctype html>
+<html lang="en-US">
+    <head>
+        <title> Proxy Project! </title>
+        <meta charset="UTF-8">
+        <link rel="icon" type="image/png" href="https://www.oropezasc.com/wp-content/uploads/2015/08/110-1.png?77b37e">
+        <style type="text/css">
+            body{
+                background-color: #96a5a6;
+            }
+        </style>
+    </head>
+    <body>
+        <h1> "Navigating under Proxy" </h1>
+    </body>
+</html>

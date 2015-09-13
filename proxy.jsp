@@ -13,7 +13,6 @@
 <!-- Initiatig the imports -->
 <%@page import=
     "java.net.*,
-    org.apache.commons.httpclient.*,
     java.io.*,
     java.util.Map,
     java.util.Set,
@@ -262,3 +261,4 @@ try {
     response.setStatus(500);
 }
 %>
+

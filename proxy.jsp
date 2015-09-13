@@ -5,9 +5,9 @@
     Author     : Gabriel Cueto Báez
     Web        : http://laesporadelhongo.com/
 -->
-<!-- =======================
-        Start the JSP code 
-    ======================== -->
+<!-- ==================================
+            Start the JSP code 
+    =================================== -->
 
 <%@page session="false" %>
 <!-- Initiatig the imports -->
@@ -22,12 +22,14 @@
     java.util.List" 
 %>
 
-<!-- Initiating declaration. -->
+<!-- ====================================
+            Initiating declaration. 
+    ===================================== -->
 <%! 
-    // Set the default values of the proxy.
-    // Change 'localhost' for the proxy address.
-    // If you do not use a port different of '80', you do not need to 
-    // specify at the address.
+    /* Set the default values of the proxy.
+    * Change 'localhost' for the proxy address.
+    * If you do not use a port different of '80', you do not need to 
+    * specify at the address. */
     String PROXY_ADDR = "http://localhost:8080/Proxy_JSP/proxy.jsp";
     URL url;
     // Gets the url that the user want to access.
@@ -233,7 +235,10 @@
     }
 %>
 
-<!-- Begins the interesting code. -->
+<!-- 
+    ====================================
+        Begins the interesting code. 
+    ==================================== -->
 <%
 req_url = request.getQueryString();
 try {

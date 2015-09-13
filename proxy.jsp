@@ -78,14 +78,12 @@
     // Change the URL into 'https' format.
     private String get_Full_Url(String _url) throws UnsupportedEncodingException{
         if(_url.startsWith("//")){
-            _url = _url.replace("//","https://");
+            _url = _url.replace("//","http://");
         } 
         else if(_url.startsWith("www")){
-            _url = _url.replace("www", "https://www");
+            _url = _url.replace("www", "http://www");
         }
-        else if(_url.startsWith("http://")){
-            _url = _url.replace("http://", "https://");    
-        }
+        else if(_url.startsWith("http://")){}
         else if (_url.toLowerCase().startsWith("http%3a%2f%2f") || _url.toLowerCase().startsWith("https%3a%2f%2f")){ 
             _url = URLDecoder.decode(_url, "UTF-8");
         }
@@ -96,10 +94,7 @@
     private byte[] read_Request_Body(HttpServletRequest request) throws IOException{
         int clength = request.getContentLength();
         if(clength > 0) {
-            //con.setDoInput(true);
             byte[] bytes = new byte[clength];
-            //request.getInputStream().read(bytes, 0, clength);
-            //con.getOutputStream().write(bytes, 0, clength);
             DataInputStream dataIs = new DataInputStream(request.getInputStream());
             dataIs.readFully(bytes);
             dataIs.close();
@@ -108,18 +103,18 @@
         return new byte[0];
     }
 
-    // Simplified interface of doHTTPRequest, will eventually call the complete interface of doHTTPRequest
+    // Simplified interface of doHTTPRequest, will eventually call the complete interface of doHTTPRequest.
     private HttpURLConnection doHTTPRequest(String uri, String method) throws IOException{
-        //build the bytes sent to server
+        // Build the bytes sent to server.
         byte[] bytes = null;
 
         // Build the header sent to server.
         HashMap<String, String> headerInfo = new HashMap<String, String>();
-        headerInfo.put("Referer", PROXY_ADDR);
+        //headerInfo.put("Referer", PROXY_ADDR);
         if (method.equals("POST")){
             String[] uriArray = uri.split("\\?", 2);
             uri = uriArray[0];
-
+            System.out.println(uri);
             headerInfo.put("Content-Type", "application/x-www-form-urlencoded");
 
             if (uriArray.length > 1){
@@ -283,6 +278,10 @@ try {
         </style>
     </head>
     <body>
-        <h1> "Navigating under Proxy" </h1>
+        <h1> Welcome!! </h1>
+        <form action="proxy.jsp">
+            <input type="text" placeholder="Introduce the URL!" required>
+            <!-- <input type="submit" value="Go to!"> -->
+        </form>
     </body>
 </html>
